@@ -3,4 +3,9 @@
 const glfw = @import("zglfw");
 const gl = @import("gl");
 const std = @import("std");
-const backend = @import("opengl_backend.zig");
+const app = @import("application.zig");
+
+pub fn main() !void {
+    std.debug.print("<!--Skri-a Kaark-->", .{});
+    app.init();
+}
