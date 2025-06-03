@@ -19,7 +19,7 @@ const FLAGS = struct {
 };
 
 const APPINFO = struct {
-    title: [128:0]u8 = undefined,
+    title: [128]u8 = undefined,
     windowWidth: c_int = 800,
     windowHeight: c_int = 600,
     majorVersion: c_int = 4,
@@ -28,8 +28,8 @@ const APPINFO = struct {
     flags: FLAGS,
 };
 
-var info = APPINFO{ .flags = FLAGS{} };
-var window: *glfw.Window = undefined;
+pub var info = APPINFO{ .flags = FLAGS{} };
+pub var window: *glfw.Window = undefined;
 var allocator: std.mem.allocator = undefined;
 
 // public virtual functions
@@ -38,7 +38,6 @@ pub var construct: *const fn () anyerror!void = virtual_void;
 pub var destruct: *const fn () anyerror!void = virtual_void;
 
 // others are the original methods
-pub var init: *const fn () void = init_default();
 pub var start_up: *const fn () anyerror!void = virtual_void;
 pub var render: *const fn (f64) anyerror!void = virtual_f64_void;
 pub var shutdown: *const fn () anyerror!void = virtual_void;
@@ -55,23 +54,23 @@ pub var get_mouse_position: *const fn (*c_int, *c_int) anyerror!void = virtual_c
 pub var glfw_onResize: *const fn (c_int, c_int) anyerror!void = virtual_2c_int_void;
 
 // placeholder functions
-pub fn virtual_void() anyerror!void {
+fn virtual_void() anyerror!void {
     return error.OperationNotSupportedError;
 }
 
-pub fn virtual_f64_void(_: f64) anyerror!void {
+fn virtual_f64_void(_: f64) anyerror!void {
     return error.OperationNotSupportedError;
 }
 
-pub fn virtual_c_int_void(_: c_int, _: c_int) void {
+fn virtual_c_int_void(_: c_int, _: c_int) void {
     return error.OperationNotSupportedError;
 }
 
-pub fn virtual_2c_int_void(_: c_int, _: c_int) void {
+fn virtual_2c_int_void(_: c_int, _: c_int) void {
     return error.OperationNotSupportedError;
 }
 
-pub fn virtual_2c_int_ptr_void(_: *c_int, _: *c_int) void {
+fn virtual_2c_int_ptr_void(_: *c_int, _: *c_int) void {
     return error.OperationNotSupportedError;
 }
 
@@ -82,9 +81,8 @@ pub fn set_window_title(title: [:0]const u8) void {
     glfw.setWindowTitle(window, title);
 }
 
-fn init_default() void {
-    const title = "OpenGL SuperBible Example" ++ " " ** 103;
-    info.title = title;
+pub fn init_default() !void {
+    std.mem.copyForwards(u8, &info.title, "OpenGL SuperBible Example");
     info.windowWidth = 800;
     info.windowHeight = 600;
 
@@ -97,11 +95,5 @@ fn init_default() void {
 
     if (comptime builtin.mode == .Debug) {
         info.flags.debug = 1;
-    }
-}
-
-fn string_copy(title: *[]u8, input: []u8) void {
-    for (input, 0..) |char, i| {
-        title[i] = char;
     }
 }
