@@ -9,6 +9,8 @@ pub const APPINFOTAG = enum {
 };
 
 const FLAGS = struct {
+    // the "all" property is useless in zig because union behaves differently in C
+    // which was no an intended feature for union.
     all: c_uint = 0,
     fullscreen: c_uint = 0,
     vsync: c_uint = 0,
