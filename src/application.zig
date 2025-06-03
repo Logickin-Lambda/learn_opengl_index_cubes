@@ -10,12 +10,12 @@ pub const APPINFOTAG = enum {
 
 const FLAGS = struct {
     all: c_uint = 0,
-    fullscreen: c_uint = 1,
-    vsync: c_uint = 1,
-    cursor: c_uint = 1,
-    stereo: c_uint = 1,
-    debug: c_uint = 1,
-    robust: c_uint = 1,
+    fullscreen: c_uint = 0,
+    vsync: c_uint = 0,
+    cursor: c_uint = 0,
+    stereo: c_uint = 0,
+    debug: c_uint = 0,
+    robust: c_uint = 0,
 };
 
 const APPINFO = struct {
@@ -130,7 +130,8 @@ pub fn run() void {
 
     // since stereo contains 1 or 0 which is same as how OpenGL present its true and false value
     // we can squarely use the numerical values.
-    glfw.windowHint(glfw.WindowHint.stereo, (info.flags.stereo == gl.TRUE));
+    const stereo = info.flags.stereo == gl.TRUE; // used for rendering VR, thus false by default for normal screen
+    glfw.windowHint(glfw.WindowHint.stereo, stereo);
 
     // full screen handling are ignored in the original sb7.h code, so I will skip that part of code
     const is_full_screen: ?*glfw.Monitor = if (info.flags.fullscreen == gl.TRUE) glfw.getPrimaryMonitor() else null;
@@ -145,7 +146,6 @@ pub fn run() void {
         std.log.err("info.windowWidth: {d}", .{info.windowWidth});
         std.log.err("info.windowHeight: {d}", .{info.windowHeight});
         std.log.err("info.title: {s}", .{info.title});
-        std.log.err("is_full_screen: {any}", .{is_full_screen.?});
         return;
     };
     defer window.destroy();
@@ -194,7 +194,7 @@ pub fn run() void {
         glfw.pollEvents();
 
         running = running and (glfw.getKey(window, glfw.Key.escape) == .release);
-        running = running and glfw.windowShouldClose(window);
+        running = running and !glfw.windowShouldClose(window);
     }
 
     shutdown();

@@ -5,6 +5,5 @@ const app = @import("application.zig");
 
 pub fn main() !void {
     std.debug.print("<!--Skri-a Kaark-->\n", .{});
-
     app.run();
 }
