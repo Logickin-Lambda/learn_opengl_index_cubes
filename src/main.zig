@@ -142,7 +142,8 @@ fn startup() callconv(.c) void {
     app.gl.BindBuffer(app.gl.ELEMENT_ARRAY_BUFFER, index_buffer);
     app.gl.BufferData(
         app.gl.ELEMENT_ARRAY_BUFFER,
-        @sizeOf(app.gl.ushort) * vertex_indices.len,
+        // @sizeOf(app.gl.ushort) * vertex_indices.len,
+        @sizeOf(@TypeOf(vertex_indices)),
         &vertex_indices,
         app.gl.STATIC_DRAW,
     );
@@ -164,7 +165,7 @@ fn render(current_time: f64) callconv(.c) void {
     app.gl.UseProgram(program);
 
     const proj_matrix = zm.Mat4f.perspective(
-        50.0,
+        std.math.degreesToRadians(150),
         @as(f32, @floatFromInt(app.info.windowWidth)) / @as(f32, @floatFromInt(app.info.windowHeight)),
         0.1,
         1000.0,
@@ -175,21 +176,24 @@ fn render(current_time: f64) callconv(.c) void {
     // just do the one cube example first
     const current_time_f32 = @as(f32, @floatCast(current_time));
     const f = current_time_f32 * 0.3;
+    _ = f;
 
     const mv_matrix = zm.Mat4f.translation(
         0.0,
         0.0,
-        -4.0,
-    ).multiply(zm.Mat4f.translation(
-        @sin(2.1 * f) * 0.5,
-        @cos(1.7 * 7) * 0.5,
-        @sin(1.3 * f) * @cos(1.5 * f) * 2.0,
+        0.0,
+        // -4.0,
+        // ).multiply(zm.Mat4f.translation(
+        //     @sin(std.math.degreesToRadians(2.1 * f)) * 0.5,
+        //     @cos(std.math.degreesToRadians(1.7 * f)) * 0.5,
+        //     @sin(std.math.degreesToRadians(1.3 * f)) * @cos(std.math.degreesToRadians(1.5 * f)) * 2.0,
+        // )
+    ).multiply(zm.Mat4f.rotation(
+        zm.Vec3f{ 0.0, 1.0, 0.0 },
+        std.math.degreesToRadians(current_time_f32 * 45.0),
     )).multiply(zm.Mat4f.rotation(
-        .{ 0.0, 1.0, 0.0 },
-        current_time_f32 * 45.0,
-    )).multiply(zm.Mat4f.rotation(
-        .{ 1.0, 0.0, 0.0 },
-        current_time_f32 * 81.0,
+        zm.Vec3f{ 1.0, 0.0, 0.0 },
+        std.math.degreesToRadians(current_time_f32 * 81.0),
     ));
 
     // std.debug.print("mv_matrix: {any}\n\n", .{mv_matrix});

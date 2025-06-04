@@ -38,7 +38,7 @@ pub const vertexShaderImpl =
     \\
     \\ void main (void)
     \\ {
-    \\      gl_Position = proj_matrix * mv_matrix * position;
+    \\      gl_Position =  mv_matrix * position;
     \\      vs_out.color = position * 2.0 + vec4(0.5, 0.5, 0.5, 0.0);
     \\ }
 ;
