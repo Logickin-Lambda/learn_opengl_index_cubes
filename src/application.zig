@@ -1,5 +1,9 @@
 const std = @import("std");
 const builtin = @import("builtin");
+const debugapi = @cImport({
+    @cInclude("debugapi.h");
+});
+
 pub const glfw = @import("zglfw");
 pub const gl = @import("gl");
 
@@ -14,7 +18,7 @@ const FLAGS = struct {
     all: c_uint = 0,
     fullscreen: c_uint = 0,
     vsync: c_uint = 0,
-    cursor: c_uint = 1,
+    cursor: c_uint = 0,
     stereo: c_uint = 0,
     debug: c_uint = 0,
     robust: c_uint = 0,
@@ -25,7 +29,7 @@ const APPINFO = struct {
     windowWidth: c_int = 800,
     windowHeight: c_int = 600,
     majorVersion: c_int = 4,
-    minorversion: c_int = 5,
+    minorversion: c_int = 3,
     samples: c_int = 0,
     flags: FLAGS,
 };
@@ -53,6 +57,7 @@ pub var on_mouse_move: *const fn (*glfw.Window, f64, f64) callconv(.c) void = vi
 pub var on_mouse_wheel: *const fn (*glfw.Window, f64, f64) callconv(.c) void = virtual_win_mmove_void;
 pub var get_mouse_position: *const fn (*glfw.Window, *c_int, *c_int) callconv(.c) void = virtual_win_c_int_void;
 pub var glfw_onResize: *const fn (*glfw.Window, c_int, c_int) callconv(.c) void = virtual_win_2c_int_void;
+pub var on_debug_message: *const fn (gl.@"enum", gl.@"enum", gl.uint, gl.@"enum", gl.sizei, [*:0]const gl.char, ?*const anyopaque) callconv(.c) void = on_debug_message_impl;
 
 // placeholder functions
 fn virtual_init() anyerror!void {
@@ -96,6 +101,13 @@ pub fn init_default() void {
 
     if (comptime builtin.mode == .Debug) {
         info.flags.debug = 1;
+    }
+}
+
+fn on_debug_message_impl(_: gl.@"enum", _: gl.@"enum", _: gl.uint, _: gl.@"enum", _: gl.sizei, message: [*:0]const gl.char, _: ?*const anyopaque) callconv(.c) void {
+    if (builtin.os.tag == .windows) {
+        debugapi.OutputDebugStringA(message);
+        debugapi.OutputDebugStringA(message);
     }
 }
 
@@ -173,18 +185,25 @@ pub fn run() void {
     // Source: https://github.com/Logickin-Lambda/learn_opengl_first_triangle
 
     if (!procs.init(glfw.getProcAddress)) {
-        std.log.err("GL  failed", .{});
+        std.log.err("Get GL Proc Address failed", .{});
     }
 
     gl.makeProcTableCurrent(&procs);
     defer gl.makeProcTableCurrent(null);
 
-    // debug callback is not available because it involves some kind of windows callback.
-    // will figure that out if I have time
     if (builtin.mode == .Debug) {
         std.debug.print("VENDOR: {s}\n", .{gl.GetString(gl.VENDOR).?});
         std.debug.print("VERSION: {s}\n", .{gl.GetString(gl.VERSION).?});
         std.debug.print("RENDERER: {s}\n", .{gl.GetString(gl.RENDERER).?});
+    }
+
+    // Since I have defaulted the OpenGL version to 4.3, I will skip ahead the version check
+    // because I haven't figured out what is gl3w while glfw doesn't have IsSupported
+    if (info.flags.debug == gl.TRUE) {
+        // I can't tell if the debug message callback really works
+        // because there is neither compilation error nor debug log
+        gl.DebugMessageCallback(on_debug_message, &0);
+        gl.Enable(gl.DEBUG_OUTPUT_SYNCHRONOUS);
     }
 
     start_up();
@@ -200,4 +219,35 @@ pub fn run() void {
     }
 
     shutdown();
+}
+
+// Additional program that is not included in sb7.h, but useful for debugging:
+pub fn verifyShader(shader: c_uint, success: *c_int, infoLog: [:0]u8) !void {
+    gl.GetShaderiv(shader, gl.COMPILE_STATUS, success);
+
+    if (success.* == gl.FALSE) {
+        gl.GetShaderInfoLog(
+            shader,
+            @as(c_int, @intCast(infoLog.len)),
+            null,
+            infoLog.ptr,
+        );
+        std.log.err("{s}", .{std.mem.sliceTo(infoLog.ptr, 0)});
+        return error.CompileVertexShaderFailed;
+    }
+}
+
+pub fn verifyProgram(shaderProgram: c_uint, success: *c_int, infoLog: [:0]u8) !void {
+    gl.GetProgramiv(shaderProgram, gl.LINK_STATUS, success);
+
+    if (success.* == gl.FALSE) {
+        gl.GetProgramInfoLog(
+            shaderProgram,
+            @as(c_int, @intCast(infoLog.len)),
+            null,
+            infoLog.ptr,
+        );
+        std.log.err("{s}", .{infoLog});
+        return error.LinkProgramFailed;
+    }
 }

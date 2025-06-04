@@ -27,10 +27,17 @@ pub fn main() !void {
 
 fn init() anyerror!void {
     app.init_default();
+    app.info.flags.cursor = 1;
+    app.info.flags.debug = 1;
     std.mem.copyForwards(u8, &app.info.title, "OpenGL SuperBible - Indexed Cube");
 }
 
 fn startup() callconv(.c) void {
+    // 6. loading, compiling and verifying shaders
+    // variables for verifications
+    var success: c_int = undefined;
+    var infoLog: [512:0]u8 = undefined;
+
     program = app.gl.CreateProgram();
 
     // vertex shader
@@ -42,6 +49,9 @@ fn startup() callconv(.c) void {
         &.{shader.vertexShaderImpl.len},
     );
     app.gl.CompileShader(vs);
+    app.verifyShader(vs, &success, &infoLog) catch {
+        return;
+    };
 
     // fragment shader
     const fs: app.gl.uint = app.gl.CreateShader(app.gl.FRAGMENT_SHADER);
@@ -52,11 +62,17 @@ fn startup() callconv(.c) void {
         &.{@as(c_int, @intCast(shader.fragmentShaderImpl.len))},
     );
     app.gl.CompileShader(fs);
+    app.verifyShader(fs, &success, &infoLog) catch {
+        return;
+    };
 
     app.gl.AttachShader(program, vs);
     app.gl.AttachShader(program, fs);
 
     app.gl.LinkProgram(program);
+    app.verifyProgram(program, &success, &infoLog) catch {
+        return;
+    };
 
     // NEW: get the uniform matrix defined from the shader program
     // which are the mv_matrix and proj_matrix
@@ -138,7 +154,6 @@ fn startup() callconv(.c) void {
 }
 
 fn render(current_time: f64) callconv(.c) void {
-    // var i: app.gl.int = undefined;
     const green: [4]app.gl.float = .{ 0.0, 0.25, 0.0, 1.0 };
     const one: app.gl.float = 1.0;
 
@@ -155,7 +170,7 @@ fn render(current_time: f64) callconv(.c) void {
         1000.0,
     );
 
-    app.gl.UniformMatrix4fv(proj_location, 1, app.gl.FALSE, @as([*]const f32, @ptrCast(&proj_matrix)));
+    app.gl.UniformMatrix4fv(proj_location, 1, app.gl.FALSE, @ptrCast(&proj_matrix));
 
     // just do the one cube example first
     const current_time_f32 = @as(f32, @floatCast(current_time));
@@ -176,6 +191,8 @@ fn render(current_time: f64) callconv(.c) void {
         .{ 1.0, 0.0, 0.0 },
         current_time_f32 * 81.0,
     ));
+
+    // std.debug.print("mv_matrix: {any}\n\n", .{mv_matrix});
 
     app.gl.UniformMatrix4fv(mv_location, 1, app.gl.FALSE, @ptrCast(&mv_matrix));
     app.gl.DrawElements(app.gl.TRIANGLES, 36, app.gl.UNSIGNED_SHORT, 0);

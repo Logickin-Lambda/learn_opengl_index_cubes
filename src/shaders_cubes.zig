@@ -24,7 +24,7 @@
 ///     vs_out.color = position * 2.0 + vec4(0.5, 0.5, 0.5, 0.0);
 /// }
 pub const vertexShaderImpl =
-    \\ #version 450 core
+    \\ #version 430 core
     \\
     \\ in vec4 position;
     \\
@@ -33,8 +33,8 @@ pub const vertexShaderImpl =
     \\      vec4 color;
     \\ } vs_out;
     \\
-    \\ uniform mat4 mv_matrix
-    \\ uniform mat4 proj_matrix
+    \\ uniform mat4 mv_matrix;
+    \\ uniform mat4 proj_matrix;
     \\
     \\ void main (void)
     \\ {
@@ -45,7 +45,7 @@ pub const vertexShaderImpl =
 
 /// fragment Shader, changing the color of the the geometries
 pub const fragmentShaderImpl =
-    \\ #version 450 core
+    \\ #version 430 core
     \\
     \\ out vec4 color;
     \\
