@@ -169,7 +169,15 @@ fn render(current_time: f64) callconv(.c) void {
         8.0 / 6.0,
         0.1,
         1000,
-    );
+    ).transpose();
+
+    // std.debug.print("\n", .{});
+    // for (0..16) |i| {
+    //     std.debug.print("{d} ", .{proj_matrix.data[i]});
+    //     if (i % 4 == 3) {
+    //         std.debug.print("\n", .{});
+    //     }
+    // }
 
     app.gl.UniformMatrix4fv(proj_location, 1, app.gl.FALSE, @ptrCast(&proj_matrix));
 
@@ -196,7 +204,7 @@ fn render(current_time: f64) callconv(.c) void {
         std.math.degreesToRadians(current_time_f32 * 81.0),
     );
 
-    mv_matrix = mv_matrix.multiply(mv_b.multiply(mv_c.multiply(mv_d)));
+    mv_matrix = mv_matrix.multiply(mv_b.multiply(mv_c.multiply(mv_d))).transpose();
 
     // std.debug.print("mv_matrix: {any}\n\n", .{mv_matrix});
 
