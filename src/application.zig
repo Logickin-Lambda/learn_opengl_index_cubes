@@ -50,7 +50,7 @@ pub var init: *const fn () anyerror!void = virtual_init;
 pub var start_up: *const fn () callconv(.c) void = virtual_void;
 pub var render: *const fn (f64) callconv(.c) void = virtual_f64_void;
 pub var shutdown: *const fn () callconv(.c) void = virtual_void;
-pub var on_resize: *const fn (*glfw.Window, c_int, c_int) callconv(.c) void = virtual_win_2c_int_void;
+pub var on_resize: *const fn (*glfw.Window, c_int, c_int) callconv(.c) void = on_resize_impl;
 pub var on_key: *const fn (*glfw.Window, glfw.Key, c_int, glfw.Action, glfw.Mods) callconv(.c) void = virtual_win_key_void;
 pub var on_mouse_button: *const fn (*glfw.Window, glfw.MouseButton, glfw.Action, glfw.Mods) callconv(.c) void = virtual_win_mbtn_void;
 pub var on_mouse_move: *const fn (*glfw.Window, f64, f64) callconv(.c) void = virtual_win_mmove_void;
@@ -109,6 +109,11 @@ fn on_debug_message_impl(_: gl.@"enum", _: gl.@"enum", _: gl.uint, _: gl.@"enum"
         debugapi.OutputDebugStringA(message);
         debugapi.OutputDebugStringA(message);
     }
+}
+
+fn on_resize_impl(_: *glfw.Window, w: c_int, h: c_int) callconv(.c) void {
+    info.windowWidth = w;
+    info.windowHeight = h;
 }
 
 pub fn run() void {

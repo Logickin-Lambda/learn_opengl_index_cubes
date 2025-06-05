@@ -149,9 +149,9 @@ fn startup() callconv(.c) void {
     );
 
     // the following enables and disables the specified GL features
-    app.gl.Enable(app.gl.CULL_FACE); // discard supposedly back facing triangles
-    app.gl.Enable(app.gl.DEPTH_TEST);
-    app.gl.Enable(app.gl.LEQUAL);
+    // app.gl.Enable(app.gl.CULL_FACE); // discard supposedly back facing triangles
+    // app.gl.Enable(app.gl.DEPTH_TEST);
+    // app.gl.Enable(app.gl.LEQUAL);
 }
 
 fn render(current_time: f64) callconv(.c) void {
@@ -165,10 +165,10 @@ fn render(current_time: f64) callconv(.c) void {
     app.gl.UseProgram(program);
 
     const proj_matrix = zm.Mat4f.perspective(
-        std.math.degreesToRadians(150),
-        @as(f32, @floatFromInt(app.info.windowWidth)) / @as(f32, @floatFromInt(app.info.windowHeight)),
+        std.math.degreesToRadians(50),
+        8.0 / 6.0,
         0.1,
-        1000.0,
+        1000,
     );
 
     app.gl.UniformMatrix4fv(proj_location, 1, app.gl.FALSE, @ptrCast(&proj_matrix));
@@ -176,25 +176,27 @@ fn render(current_time: f64) callconv(.c) void {
     // just do the one cube example first
     const current_time_f32 = @as(f32, @floatCast(current_time));
     const f = current_time_f32 * 0.3;
-    _ = f;
 
-    const mv_matrix = zm.Mat4f.translation(
+    var mv_matrix = zm.Mat4f.translation(
         0.0,
         0.0,
-        0.0,
-        // -4.0,
-        // ).multiply(zm.Mat4f.translation(
-        //     @sin(std.math.degreesToRadians(2.1 * f)) * 0.5,
-        //     @cos(std.math.degreesToRadians(1.7 * f)) * 0.5,
-        //     @sin(std.math.degreesToRadians(1.3 * f)) * @cos(std.math.degreesToRadians(1.5 * f)) * 2.0,
-        // )
-    ).multiply(zm.Mat4f.rotation(
+        -4.0,
+    );
+    const mv_b = zm.Mat4f.translation(
+        @sin(2.1 * f) * 0.5,
+        @cos(1.7 * f) * 0.5,
+        @sin(1.3 * f) * @cos(1.5 * f) * 2.0,
+    );
+    const mv_c = zm.Mat4f.rotation(
         zm.Vec3f{ 0.0, 1.0, 0.0 },
         std.math.degreesToRadians(current_time_f32 * 45.0),
-    )).multiply(zm.Mat4f.rotation(
+    );
+    const mv_d = zm.Mat4f.rotation(
         zm.Vec3f{ 1.0, 0.0, 0.0 },
         std.math.degreesToRadians(current_time_f32 * 81.0),
-    ));
+    );
+
+    mv_matrix = mv_matrix.multiply(mv_b.multiply(mv_c.multiply(mv_d)));
 
     // std.debug.print("mv_matrix: {any}\n\n", .{mv_matrix});
 
