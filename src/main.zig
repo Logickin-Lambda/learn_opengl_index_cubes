@@ -18,6 +18,10 @@ var index_buffer: app.gl.uint = undefined;
 pub fn main() !void {
     // "override" your program using function pointer,
     // and the run function will process them all
+
+    // Many people seem to hate the dynamic loading part of the program
+    // I also not a fan of it, let see if I can detach this "function override" method
+    // while loosely resemble the original superbible structure
     app.init = init;
     app.start_up = startup;
     app.render = render;
@@ -149,9 +153,9 @@ fn startup() callconv(.c) void {
     );
 
     // the following enables and disables the specified GL features
-    // app.gl.Enable(app.gl.CULL_FACE); // discard supposedly back facing triangles
-    // app.gl.Enable(app.gl.DEPTH_TEST);
-    // app.gl.Enable(app.gl.LEQUAL);
+    app.gl.Enable(app.gl.CULL_FACE); // discard supposedly back facing triangles
+    app.gl.Enable(app.gl.DEPTH_TEST);
+    app.gl.Enable(app.gl.LEQUAL);
 }
 
 fn render(current_time: f64) callconv(.c) void {

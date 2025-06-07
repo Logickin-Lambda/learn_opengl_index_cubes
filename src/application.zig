@@ -7,15 +7,8 @@ const debugapi = @cImport({
 pub const glfw = @import("zglfw");
 pub const gl = @import("gl");
 
-pub const APPINFOTAG = enum {
-    struct_type,
-    c_uint_type,
-};
-
 const FLAGS = struct {
-    // the "all" property is useless in zig because union behaves differently in C
     // which was not an intended feature for union.
-    all: c_uint = 0,
     fullscreen: c_uint = 0,
     vsync: c_uint = 0,
     cursor: c_uint = 0,
@@ -42,43 +35,22 @@ var procs: gl.ProcTable = undefined;
 
 // public virtual functions
 // these two emulate the constructor and destructor
-pub var construct: *const fn () callconv(.c) void = virtual_void;
-pub var destruct: *const fn () callconv(.c) void = virtual_void;
-pub var init: *const fn () anyerror!void = virtual_init;
+pub var construct: *const fn () callconv(.c) void = undefined;
+pub var destruct: *const fn () callconv(.c) void = undefined;
+pub var init: *const fn () anyerror!void = undefined;
 
 // others are the original methods
-pub var start_up: *const fn () callconv(.c) void = virtual_void;
-pub var render: *const fn (f64) callconv(.c) void = virtual_f64_void;
-pub var shutdown: *const fn () callconv(.c) void = virtual_void;
+pub var start_up: *const fn () callconv(.c) void = undefined;
+pub var render: *const fn (f64) callconv(.c) void = undefined;
+pub var shutdown: *const fn () callconv(.c) void = undefined;
 pub var on_resize: *const fn (*glfw.Window, c_int, c_int) callconv(.c) void = on_resize_impl;
-pub var on_key: *const fn (*glfw.Window, glfw.Key, c_int, glfw.Action, glfw.Mods) callconv(.c) void = virtual_win_key_void;
-pub var on_mouse_button: *const fn (*glfw.Window, glfw.MouseButton, glfw.Action, glfw.Mods) callconv(.c) void = virtual_win_mbtn_void;
-pub var on_mouse_move: *const fn (*glfw.Window, f64, f64) callconv(.c) void = virtual_win_mmove_void;
-pub var on_mouse_wheel: *const fn (*glfw.Window, f64, f64) callconv(.c) void = virtual_win_mmove_void;
-pub var get_mouse_position: *const fn (*glfw.Window, *c_int, *c_int) callconv(.c) void = virtual_win_c_int_void;
-pub var glfw_onResize: *const fn (*glfw.Window, c_int, c_int) callconv(.c) void = virtual_win_2c_int_void;
+pub var on_key: *const fn (*glfw.Window, glfw.Key, c_int, glfw.Action, glfw.Mods) callconv(.c) void = undefined;
+pub var on_mouse_button: *const fn (*glfw.Window, glfw.MouseButton, glfw.Action, glfw.Mods) callconv(.c) void = undefined;
+pub var on_mouse_move: *const fn (*glfw.Window, f64, f64) callconv(.c) void = undefined;
+pub var on_mouse_wheel: *const fn (*glfw.Window, f64, f64) callconv(.c) void = undefined;
+pub var get_mouse_position: *const fn (*glfw.Window, *c_int, *c_int) callconv(.c) void = undefined;
+pub var glfw_onResize: *const fn (*glfw.Window, c_int, c_int) callconv(.c) void = undefined;
 pub var on_debug_message: *const fn (gl.@"enum", gl.@"enum", gl.uint, gl.@"enum", gl.sizei, [*:0]const gl.char, ?*const anyopaque) callconv(.c) void = on_debug_message_impl;
-
-// placeholder functions
-fn virtual_init() anyerror!void {
-    return error.OperationNotSupportedError;
-}
-
-fn virtual_void() callconv(.c) void {}
-
-fn virtual_f64_void(_: f64) callconv(.c) void {}
-
-fn virtual_win_c_int_void(_: *glfw.Window, _: c_int) callconv(.c) void {}
-
-fn virtual_win_2c_int_void(_: *glfw.Window, _: c_int, _: c_int) callconv(.c) void {}
-
-fn virtual_win_key_void(_: *glfw.Window, _: glfw.Key, _: c_int, _: glfw.Action, _: glfw.Mods) callconv(.c) void {}
-
-fn virtual_win_mbtn_void(_: *glfw.Window, _: glfw.MouseButton, _: glfw.Action, _: glfw.Mods) callconv(.c) void {}
-
-fn virtual_win_mmove_void(_: *glfw.Window, _: f64, _: f64) callconv(.c) void {}
-
-fn virtual_2c_int_ptr_void(_: *glfw.Window, _: *c_int, _: *c_int) callconv(.c) void {}
 
 // concrete functions:
 // pub fn set_v_sync(enable: bool) void {}
@@ -116,6 +88,8 @@ fn on_resize_impl(_: *glfw.Window, w: c_int, h: c_int) callconv(.c) void {
     info.windowHeight = h;
 }
 
+/// This is actually not a good code by the name because most of the function are related to
+/// initialization of the glfw windows, which should belong to the init function.
 pub fn run() void {
     var running = true;
 
