@@ -149,9 +149,9 @@ fn startup() callconv(.c) void {
     );
 
     // the following enables and disables the specified GL features
-    // app.gl.Enable(app.gl.CULL_FACE); // discard supposedly back facing triangles
-    // app.gl.Enable(app.gl.DEPTH_TEST);
-    // app.gl.Enable(app.gl.LEQUAL);
+    app.gl.Enable(app.gl.CULL_FACE); // discard supposedly back facing triangles
+    app.gl.Enable(app.gl.DEPTH_TEST);
+    app.gl.Enable(app.gl.LEQUAL);
 }
 
 fn render(current_time: f64) callconv(.c) void {
@@ -166,20 +166,12 @@ fn render(current_time: f64) callconv(.c) void {
 
     const proj_matrix = zm.Mat4f.perspective(
         std.math.degreesToRadians(50),
-        8.0 / 6.0,
+        @as(f32, @floatFromInt(app.info.windowWidth)) / @as(f32, @floatFromInt(app.info.windowHeight)),
         0.1,
         1000,
-    ).transpose();
+    );
 
-    // std.debug.print("\n", .{});
-    // for (0..16) |i| {
-    //     std.debug.print("{d} ", .{proj_matrix.data[i]});
-    //     if (i % 4 == 3) {
-    //         std.debug.print("\n", .{});
-    //     }
-    // }
-
-    app.gl.UniformMatrix4fv(proj_location, 1, app.gl.FALSE, @ptrCast(&proj_matrix));
+    app.gl.UniformMatrix4fv(proj_location, 1, app.gl.TRUE, @ptrCast(&proj_matrix));
 
     // just do the one cube example first
     const current_time_f32 = @as(f32, @floatCast(current_time));
@@ -204,11 +196,9 @@ fn render(current_time: f64) callconv(.c) void {
         std.math.degreesToRadians(current_time_f32 * 81.0),
     );
 
-    mv_matrix = mv_matrix.multiply(mv_b.multiply(mv_c.multiply(mv_d))).transpose();
+    mv_matrix = mv_matrix.multiply(mv_b.multiply(mv_c.multiply(mv_d)));
 
-    // std.debug.print("mv_matrix: {any}\n\n", .{mv_matrix});
-
-    app.gl.UniformMatrix4fv(mv_location, 1, app.gl.FALSE, @ptrCast(&mv_matrix));
+    app.gl.UniformMatrix4fv(mv_location, 1, app.gl.TRUE, @ptrCast(&mv_matrix));
     app.gl.DrawElements(app.gl.TRIANGLES, 36, app.gl.UNSIGNED_SHORT, 0);
 }
 
