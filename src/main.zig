@@ -3,7 +3,7 @@
 const std = @import("std");
 const zm = @import("zm");
 
-const app = @import("application.zig");
+const app = @import("sb7.zig");
 const shader = @import("shaders_cubes.zig");
 
 var program: app.gl.uint = undefined;
@@ -16,12 +16,13 @@ var position_buffer: app.gl.uint = undefined;
 var index_buffer: app.gl.uint = undefined;
 
 pub fn main() !void {
+    // Many people seem to hate the dynamic loading part of the program.
+    // I also hate it too, but I don't seem to find a good solution (yet)
+    // that is aligned with both zig good practice and the book
+    // which is unfortunately abstracted all tbe inner details.
+
     // "override" your program using function pointer,
     // and the run function will process them all
-
-    // Many people seem to hate the dynamic loading part of the program
-    // I also not a fan of it, let see if I can detach this "function override" method
-    // while loosely resemble the original superbible structure
     app.init = init;
     app.start_up = startup;
     app.render = render;
@@ -174,14 +175,6 @@ fn render(current_time: f64) callconv(.c) void {
         0.1,
         1000,
     ).transpose();
-
-    // std.debug.print("\n", .{});
-    // for (0..16) |i| {
-    //     std.debug.print("{d} ", .{proj_matrix.data[i]});
-    //     if (i % 4 == 3) {
-    //         std.debug.print("\n", .{});
-    //     }
-    // }
 
     app.gl.UniformMatrix4fv(proj_location, 1, app.gl.FALSE, @ptrCast(&proj_matrix));
 

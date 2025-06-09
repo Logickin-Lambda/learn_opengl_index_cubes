@@ -1,3 +1,29 @@
+/// Disclaimer:
+/// I have been searching for a better alternative to those function pointers,
+/// into a more directed way to write the examples; unfortunately, aligning to the
+/// original superbible is another requirement into this project, exposing the
+/// similar code structure and function instead of writing the most optimal
+/// and concise code which is definitely not ideal.
+///
+/// This is definitely not an idiomatic way to write zig, and I would also
+/// discourage the use of function pointer, but because the OpenGL superbible
+/// has no explanation into the project set up or the sb7.h while many of
+/// the section in the book heavily relying on this header, I have no choice
+/// but writing in such style; otherwise, people would never understand what
+/// "override your on_debug_message() function in the given sb7.h", or
+/// "simply attach your 'sb7.h' and calls the 'run()' function that drives
+/// the inner main even loop".
+///
+/// If you actually want to start your project, you should write in a more direct way,
+/// instead of my current, the "bandage to the problem" way just to compatible with the book:
+/// For example:
+/// - https://github.com/Logickin-Lambda/learn_opengl_first_triangle/blob/main/src/main.zig
+/// - https://github.com/castholm/zig-examples/tree/master/opengl-hexagon
+/// - https://github.com/griush/zig-opengl-example/blob/master/src/main.zig
+///
+/// Don't blindly trust a source, wisely evaluate different examples and
+/// discuss with thecommunity to seek a better practice.
+///
 const std = @import("std");
 const builtin = @import("builtin");
 const debugapi = @cImport({
@@ -8,7 +34,6 @@ pub const glfw = @import("zglfw");
 pub const gl = @import("gl");
 
 const FLAGS = struct {
-    // which was not an intended feature for union.
     fullscreen: c_uint = 0,
     vsync: c_uint = 0,
     cursor: c_uint = 0,
@@ -30,16 +55,12 @@ const APPINFO = struct {
 pub var info = APPINFO{ .flags = FLAGS{} };
 pub var window: *glfw.Window = undefined;
 
-var allocator: std.mem.allocator = undefined;
 var procs: gl.ProcTable = undefined;
 
 // public virtual functions
-// these two emulate the constructor and destructor
-pub var construct: *const fn () callconv(.c) void = undefined;
-pub var destruct: *const fn () callconv(.c) void = undefined;
 pub var init: *const fn () anyerror!void = undefined;
 
-// others are the original methods
+// others are the original methods from sb7.h
 pub var start_up: *const fn () callconv(.c) void = undefined;
 pub var render: *const fn (f64) callconv(.c) void = undefined;
 pub var shutdown: *const fn () callconv(.c) void = undefined;
