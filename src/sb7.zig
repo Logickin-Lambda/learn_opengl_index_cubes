@@ -48,7 +48,7 @@ const APPINFO = struct {
     windowWidth: c_int = 800,
     windowHeight: c_int = 600,
     majorVersion: c_int = 4,
-    minorversion: c_int = 3,
+    minorversion: c_int = 5,
     samples: c_int = 0,
     flags: FLAGS,
 };

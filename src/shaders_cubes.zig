@@ -24,7 +24,7 @@
 ///     vs_out.color = position * 2.0 + vec4(0.5, 0.5, 0.5, 0.0);
 /// }
 pub const vertexShaderImpl =
-    \\ #version 430 core
+    \\ #version 450 core
     \\
     \\ in vec4 position;
     \\
@@ -45,7 +45,7 @@ pub const vertexShaderImpl =
 
 /// fragment Shader, changing the color of the the geometries
 pub const fragmentShaderImpl =
-    \\ #version 430 core
+    \\ #version 450 core
     \\
     \\ out vec4 color;
     \\

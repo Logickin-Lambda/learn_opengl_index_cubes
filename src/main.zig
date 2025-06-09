@@ -15,6 +15,8 @@ var proj_location: app.gl.int = undefined;
 var position_buffer: app.gl.uint = undefined;
 var index_buffer: app.gl.uint = undefined;
 
+const MANY_CUBES = true;
+
 pub fn main() !void {
     // Many people seem to hate the dynamic loading part of the program.
     // I also hate it too, but I don't seem to find a good solution (yet)
@@ -38,7 +40,7 @@ fn init() anyerror!void {
 }
 
 fn startup() callconv(.c) void {
-    // 6. loading, compiling and verifying shaders
+    // loading, compiling and verifying shaders
     // variables for verifications
     var success: c_int = undefined;
     var infoLog: [512:0]u8 = undefined;
@@ -108,7 +110,8 @@ fn startup() callconv(.c) void {
 
     // this tells the orientation of the vertices, grouped in three.
     // For every trine, it represents a triangle,
-    // and for every numeric value, they are the vertex index
+    // and for every numeric value, they are the vertex index.
+    // In this example, it constructs a cube:
     const vertex_indices = [_]app.gl.ushort{
         0, 1, 2,
         2, 1, 3,
@@ -176,35 +179,67 @@ fn render(current_time: f64) callconv(.c) void {
         1000,
     );
 
-    app.gl.UniformMatrix4fv(proj_location, 1, app.gl.FALSE, @ptrCast(&proj_matrix));
+    // zm is a row major matrix, while OpenGL is column major, so we need to transpose the matrix
+    // by setting the transpose to app.gl.TRUE such that OpenGL can read the matrix properly;
+    // otherwise, the rendering will completely messed up.
+    app.gl.UniformMatrix4fv(proj_location, 1, app.gl.TRUE, @ptrCast(&proj_matrix));
 
-    // just do the one cube example first
-    const current_time_f32 = @as(f32, @floatCast(current_time));
-    const f = current_time_f32 * 0.3;
+    // This is a bad practice because MANY_CUBES is a boolean which is a predefined constant,
+    // leading to dead codes which will never be executed in the runtime.
+    if (MANY_CUBES) {
+        for (0..24) |i| {
+            const current_time_f32 = @as(f32, @floatCast(current_time));
+            const f = @as(f32, @floatFromInt(i)) + current_time_f32 * 0.3;
 
-    var mv_matrix = zm.Mat4f.translation(
-        0.0,
-        0.0,
-        -4.0,
-    );
-    const mv_b = zm.Mat4f.translation(
-        @sin(2.1 * f) * 0.5,
-        @cos(1.7 * f) * 0.5,
-        @sin(1.3 * f) * @cos(1.5 * f) * 2.0,
-    );
-    const mv_c = zm.Mat4f.rotation(
-        zm.Vec3f{ 0.0, 1.0, 0.0 },
-        std.math.degreesToRadians(current_time_f32 * 45.0),
-    );
-    const mv_d = zm.Mat4f.rotation(
-        zm.Vec3f{ 1.0, 0.0, 0.0 },
-        std.math.degreesToRadians(current_time_f32 * 81.0),
-    );
+            var mv_matrix = zm.Mat4f.translation(
+                0.0,
+                0.0,
+                -20.0,
+            );
+            const mv_b = zm.Mat4f.rotation(
+                zm.Vec3{ 0.0, 1.0, 0.0 },
+                std.math.degreesToRadians(45 * current_time_f32),
+            );
+            const mv_c = zm.Mat4f.rotation(
+                zm.Vec3{ 1.0, 0.0, 0.0 },
+                std.math.degreesToRadians(21 * current_time_f32),
+            );
+            const mv_d = zm.Mat4f.translation(
+                @sin(2.1 * f) * 2,
+                @cos(1.7 * f) * 2,
+                @sin(1.3 * f) * @cos(1.5 * f) * 2.0,
+            );
 
-    mv_matrix = mv_matrix.multiply(mv_b.multiply(mv_c.multiply(mv_d)));
+            mv_matrix = mv_matrix.multiply(mv_b.multiply(mv_c.multiply(mv_d)));
 
-    app.gl.UniformMatrix4fv(mv_location, 1, app.gl.TRUE, @ptrCast(&mv_matrix));
-    app.gl.DrawElements(app.gl.TRIANGLES, 36, app.gl.UNSIGNED_SHORT, 0);
+            app.gl.UniformMatrix4fv(mv_location, 1, app.gl.TRUE, @ptrCast(&mv_matrix));
+            app.gl.DrawElements(app.gl.TRIANGLES, 36, app.gl.UNSIGNED_SHORT, 0);
+        }
+    } else {
+        // just do the one cube example first
+        const current_time_f32 = @as(f32, @floatCast(current_time));
+        const f = current_time_f32 * 0.3;
+
+        var mv_matrix = zm.Mat4f.translation(0.0, 0.0, -4.0);
+        const mv_b = zm.Mat4f.translation(
+            @sin(2.1 * f) * 0.5,
+            @cos(1.7 * f) * 0.5,
+            @sin(1.3 * f) * @cos(1.5 * f) * 2.0,
+        );
+        const mv_c = zm.Mat4f.rotation(
+            zm.Vec3f{ 0.0, 1.0, 0.0 },
+            std.math.degreesToRadians(current_time_f32 * 45.0),
+        );
+        const mv_d = zm.Mat4f.rotation(
+            zm.Vec3f{ 1.0, 0.0, 0.0 },
+            std.math.degreesToRadians(current_time_f32 * 81.0),
+        );
+
+        mv_matrix = mv_matrix.multiply(mv_b.multiply(mv_c.multiply(mv_d)));
+
+        app.gl.UniformMatrix4fv(mv_location, 1, app.gl.TRUE, @ptrCast(&mv_matrix));
+        app.gl.DrawElements(app.gl.TRIANGLES, 36, app.gl.UNSIGNED_SHORT, 0);
+    }
 }
 
 fn shutdown() callconv(.c) void {
