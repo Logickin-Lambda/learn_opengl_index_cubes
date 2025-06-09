@@ -1,3 +1,29 @@
+/// Disclaimer:
+/// I have been searching for a better alternative to those function pointers,
+/// into a more directed way to write the examples; unfortunately, aligning to the
+/// original superbible is another requirement into this project, exposing the
+/// similar code structure and function instead of writing the most optimal
+/// and concise code which is definitely not ideal.
+///
+/// This is definitely not an idiomatic way to write zig, and I would also
+/// discourage the use of function pointer, but because the OpenGL superbible
+/// has no explanation into the project set up or the sb7.h while many of
+/// the section in the book heavily relying on this header, I have no choice
+/// but writing in such style; otherwise, people would never understand what
+/// "override your on_debug_message() function in the given sb7.h", or
+/// "simply attach your 'sb7.h' and calls the 'run()' function that drives
+/// the inner main even loop".
+///
+/// If you actually want to start your project, you should write in a more direct way,
+/// instead of my current, the "bandage to the problem" way just to compatible with the book:
+/// For example:
+/// - https://github.com/Logickin-Lambda/learn_opengl_first_triangle/blob/main/src/main.zig
+/// - https://github.com/castholm/zig-examples/tree/master/opengl-hexagon
+/// - https://github.com/griush/zig-opengl-example/blob/master/src/main.zig
+///
+/// Don't blindly trust a source, wisely evaluate different examples and
+/// discuss with thecommunity to seek a better practice.
+///
 const std = @import("std");
 const builtin = @import("builtin");
 const debugapi = @cImport({
@@ -7,15 +33,7 @@ const debugapi = @cImport({
 pub const glfw = @import("zglfw");
 pub const gl = @import("gl");
 
-pub const APPINFOTAG = enum {
-    struct_type,
-    c_uint_type,
-};
-
 const FLAGS = struct {
-    // the "all" property is useless in zig because union behaves differently in C
-    // which was not an intended feature for union.
-    all: c_uint = 0,
     fullscreen: c_uint = 0,
     vsync: c_uint = 0,
     cursor: c_uint = 0,
@@ -37,48 +55,23 @@ const APPINFO = struct {
 pub var info = APPINFO{ .flags = FLAGS{} };
 pub var window: *glfw.Window = undefined;
 
-var allocator: std.mem.allocator = undefined;
 var procs: gl.ProcTable = undefined;
 
 // public virtual functions
-// these two emulate the constructor and destructor
-pub var construct: *const fn () callconv(.c) void = virtual_void;
-pub var destruct: *const fn () callconv(.c) void = virtual_void;
-pub var init: *const fn () anyerror!void = virtual_init;
+pub var init: *const fn () anyerror!void = undefined;
 
-// others are the original methods
-pub var start_up: *const fn () callconv(.c) void = virtual_void;
-pub var render: *const fn (f64) callconv(.c) void = virtual_f64_void;
-pub var shutdown: *const fn () callconv(.c) void = virtual_void;
+// others are the original methods from sb7.h
+pub var start_up: *const fn () callconv(.c) void = undefined;
+pub var render: *const fn (f64) callconv(.c) void = undefined;
+pub var shutdown: *const fn () callconv(.c) void = undefined;
 pub var on_resize: *const fn (*glfw.Window, c_int, c_int) callconv(.c) void = on_resize_impl;
-pub var on_key: *const fn (*glfw.Window, glfw.Key, c_int, glfw.Action, glfw.Mods) callconv(.c) void = virtual_win_key_void;
-pub var on_mouse_button: *const fn (*glfw.Window, glfw.MouseButton, glfw.Action, glfw.Mods) callconv(.c) void = virtual_win_mbtn_void;
-pub var on_mouse_move: *const fn (*glfw.Window, f64, f64) callconv(.c) void = virtual_win_mmove_void;
-pub var on_mouse_wheel: *const fn (*glfw.Window, f64, f64) callconv(.c) void = virtual_win_mmove_void;
-pub var get_mouse_position: *const fn (*glfw.Window, *c_int, *c_int) callconv(.c) void = virtual_win_c_int_void;
-pub var glfw_onResize: *const fn (*glfw.Window, c_int, c_int) callconv(.c) void = virtual_win_2c_int_void;
+pub var on_key: *const fn (*glfw.Window, glfw.Key, c_int, glfw.Action, glfw.Mods) callconv(.c) void = undefined;
+pub var on_mouse_button: *const fn (*glfw.Window, glfw.MouseButton, glfw.Action, glfw.Mods) callconv(.c) void = undefined;
+pub var on_mouse_move: *const fn (*glfw.Window, f64, f64) callconv(.c) void = undefined;
+pub var on_mouse_wheel: *const fn (*glfw.Window, f64, f64) callconv(.c) void = undefined;
+pub var get_mouse_position: *const fn (*glfw.Window, *c_int, *c_int) callconv(.c) void = undefined;
+pub var glfw_onResize: *const fn (*glfw.Window, c_int, c_int) callconv(.c) void = undefined;
 pub var on_debug_message: *const fn (gl.@"enum", gl.@"enum", gl.uint, gl.@"enum", gl.sizei, [*:0]const gl.char, ?*const anyopaque) callconv(.c) void = on_debug_message_impl;
-
-// placeholder functions
-fn virtual_init() anyerror!void {
-    return error.OperationNotSupportedError;
-}
-
-fn virtual_void() callconv(.c) void {}
-
-fn virtual_f64_void(_: f64) callconv(.c) void {}
-
-fn virtual_win_c_int_void(_: *glfw.Window, _: c_int) callconv(.c) void {}
-
-fn virtual_win_2c_int_void(_: *glfw.Window, _: c_int, _: c_int) callconv(.c) void {}
-
-fn virtual_win_key_void(_: *glfw.Window, _: glfw.Key, _: c_int, _: glfw.Action, _: glfw.Mods) callconv(.c) void {}
-
-fn virtual_win_mbtn_void(_: *glfw.Window, _: glfw.MouseButton, _: glfw.Action, _: glfw.Mods) callconv(.c) void {}
-
-fn virtual_win_mmove_void(_: *glfw.Window, _: f64, _: f64) callconv(.c) void {}
-
-fn virtual_2c_int_ptr_void(_: *glfw.Window, _: *c_int, _: *c_int) callconv(.c) void {}
 
 // concrete functions:
 // pub fn set_v_sync(enable: bool) void {}
@@ -116,6 +109,8 @@ fn on_resize_impl(_: *glfw.Window, w: c_int, h: c_int) callconv(.c) void {
     info.windowHeight = h;
 }
 
+/// This is actually not a good code by the name because most of the function are related to
+/// initialization of the glfw windows, which should belong to the init function.
 pub fn run() void {
     var running = true;
 
