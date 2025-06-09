@@ -1,4 +1,5 @@
-/// Disclaimer:
+/// Warning:
+///
 /// I have been searching for a better alternative to those function pointers,
 /// into a more directed way to write the examples; unfortunately, aligning to the
 /// original superbible is another requirement into this project, exposing the
