@@ -25,7 +25,8 @@
 /// }
 pub const vertexShaderImpl =
     \\ #version 450 core
-    \\
+    \\ 
+    \\ // This takes the location from the ARRAY_BUFFER
     \\ in vec4 position;
     \\
     \\ out VS_OUT
@@ -39,6 +40,10 @@ pub const vertexShaderImpl =
     \\ void main (void)
     \\ {
     \\      gl_Position = proj_matrix * mv_matrix * position; 
+    \\      
+    \\      // some vertices are initially in negative, so we need to
+    \\      // translate all vertices with an offset by the minimal value;
+    \\      // otherwise, color will mostly be black.
     \\      vs_out.color = position * 2.0 + vec4(0.5, 0.5, 0.5, 0.0);
     \\ }
 ;

@@ -15,7 +15,7 @@ var proj_location: app.gl.int = undefined;
 var position_buffer: app.gl.uint = undefined;
 var index_buffer: app.gl.uint = undefined;
 
-const MANY_CUBES = true;
+const MANY_CUBES = false;
 
 pub fn main() !void {
     // Many people seem to hate the dynamic loading part of the program.
@@ -113,6 +113,7 @@ fn startup() callconv(.c) void {
     // and for every numeric value, they are the vertex index.
     // In this example, it constructs a cube:
     const vertex_indices = [_]app.gl.ushort{
+        // These are for the original cube shape
         0, 1, 2,
         2, 1, 3,
         2, 3, 4,
@@ -125,6 +126,13 @@ fn startup() callconv(.c) void {
         2, 4, 6,
         7, 5, 3,
         7, 3, 1,
+        // The following will print a "Z" shape
+        // 0, 1, 2,
+        // 2, 1, 3,
+        // 0, 1, 4,
+        // 1, 4, 5,
+        // 4, 5, 6,
+        // 6, 5, 7,
     };
 
     // NEW: generate buffers for all the vertices with their positions

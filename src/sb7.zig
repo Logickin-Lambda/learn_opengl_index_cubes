@@ -187,6 +187,7 @@ pub fn run() void {
 
     if (!procs.init(glfw.getProcAddress)) {
         std.log.err("Get GL Proc Address failed", .{});
+        std.log.err("The program might run, but it might have missing features\n", .{});
     }
 
     gl.makeProcTableCurrent(&procs);
